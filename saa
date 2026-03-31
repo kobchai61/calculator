@@ -1,0 +1,45 @@
+rax = Operand1    ; เช่น 705
+rbx = Operand2    ; เช่น 213
+rcx = Operator    ; ASCII เช่น '+' = 43
+
+calculate:
+    cmp  rcx, '+'     ; เช็ค ASCII ว่าเป็น operator อะไร
+    je   .add
+    cmp  rcx, '-'
+    je   .sub
+    cmp  rcx, '*'
+    je   .mul
+    cmp  rcx, '/'
+    je   .div
+
+.add:  add  rax, rbx   ; op1 + op2
+.sub:  sub  rax, rbx   ; op1 - op2
+.mul:  imul rax, rbx   ; op1 * op2
+.div:  xor  rdx, rdx   ; ← clear rdx ก่อนเสมอ
+       div  rbx         ; rax = quotient (จำนวนเต็ม)
+
+
+itoa:
+    ; ขั้น 1: หาร 10 ซ้ำ → เก็บ remainder เป็น digit (กลับหัว)
+    xor  rdx, rdx
+    mov  r8, 10
+    div  r8          ; rdx = digit
+    add  dl, '0'     ; int → ASCII
+    mov  [rdi + rcx], dl
+
+    ; ขั้น 2: reverse in-place ด้วย two-pointer
+    movzx r10, byte [rdi + r8]
+    movzx r11, byte [rdi + r9]
+    mov   [rdi + r8], r11b
+    mov   [rdi + r9], r10b
+
+print_result:
+    call itoa          ; rsi = addr, rdx = len
+
+    mov  rax, 1        ; sys_write
+    mov  rdi, 1        ; stdout
+    syscall            ; ← พิมพ์ตัวเลข
+
+    lea  rsi, [rel newline]
+    mov  rdx, 1
+    syscall            ; ← พิมพ์ '\n'
